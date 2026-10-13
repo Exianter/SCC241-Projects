@@ -115,6 +115,25 @@
     armTimer = setTimeout(fireGo, wait);
   }
 
+  function repeatTrial() {
+    setTick(trialIndex, 'current');
+    phase = 'armed';
+    resetStimulusVisual();
+    stimulus.classList.add('armed');
+    status.textContent = 'Wait for it...';
+    status.classList.remove('emph');
+    readout.textContent = '';
+
+    flickerInterval = setInterval (() => {
+      SHAPES.forEach(s => stimulus.classList.remove(s));
+      currentShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      stimulus.classList.add(currentShape);
+    }, 130);
+
+    const wait = MIN_WAIT + Math.random() * (MAX_WAIT - MIN_WAIT);
+    armTimer = setTimeout(fireGo, wait);
+  }
+
   function fireGo() {
     if (flickerInterval) {
       clearInterval(flickerInterval);
