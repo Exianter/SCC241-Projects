@@ -21,6 +21,7 @@
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
   const missionText = document.getElementById('missionText');
   let flickerInterval = null;
+  let targetShape = null;
 
   // Current stage of the experiment:
   // idle = waiting to start
@@ -87,7 +88,10 @@
       return;
     }
 
-    missionText.textContent = "Mission " + (trialIndex + 1) + ": Find a shape";
+    targetShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+
+    missionText.textContent = "Mission " + (trialIndex + 1) + ": Find a " + targetShape;
+    
     setTick(trialIndex, 'current');
     phase = 'armed';
     resetStimulusVisual();
