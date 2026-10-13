@@ -87,7 +87,7 @@
       return;
     }
 
-    missionText = "Mission " + (trialIndex + 1) + ": Find a shape"; 
+    missionText.textContent = "Mission " + (trialIndex + 1) + ": Find a shape";
     setTick(trialIndex, 'current');
     phase = 'armed';
     resetStimulusVisual();
@@ -251,7 +251,11 @@
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
-      onTrigger();
+      if (phase === 'idle') {
+        startExperiment();
+      } else {
+        onTrigger();
+      }
     }
   });
 })();
