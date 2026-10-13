@@ -94,7 +94,7 @@
       return;
     }
 
-    targetShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    targetShape = SHAPES[trialIndex];
 
     missionText.textContent = "Mission " + (trialIndex + 1) + ": Find a " + targetShape;
     
