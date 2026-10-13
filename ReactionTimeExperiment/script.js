@@ -177,15 +177,35 @@
     }, 900);
   }
 
+  function wrongShape() {
+    clearTimeout(timeoutTimer);
+    mistakes++;
+    mistakeCount.textContent = mistakes;
+    phase = "between";
+    stimulus.classList.remove('go');
+    stimulus.classList.add('bad-flash');
+    status.textContent = 'Wrong shape - find a ' + targetShape;
+    status.classList.remove('emph');
+
+    readout.textContent = '';
+
+    setTimeout(() => {
+      phase = 'idle';
+      repeatTrial();
+    }, 900);
+  }
 
   function onTrigger() {
     if (phase === 'armed') {
       falseStart();
     } else if (phase === 'go') {
-      const rt = performance.now() - goTime;
-      registerResponse(rt);
+      if (currentShape === targetShape) {
+        const rt = performance.now() - goTime;
+        registerResponse(rt);
+      } else {
+        wrongShape();
+      }
     }
-    // presses during 'idle', 'between', or 'done' are ignored
   }
 
   function finishExperiment() {
