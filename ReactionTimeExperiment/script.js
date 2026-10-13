@@ -18,7 +18,7 @@
   const statMin = document.getElementById('statMin');
   const statMax = document.getElementById('statMax');
   const intro = document.getElementById('intro');
-  const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
+  const SHAPES = ['square', 'circle', 'diamond', 'rectangle','triangle','pentagon','hexagon','star','oval','rhombus'];
   const TARGET_CHANCE = 0.70;
   const missionText = document.getElementById('missionText');
   const mistakeCount = document.getElementById('mistakeCount');

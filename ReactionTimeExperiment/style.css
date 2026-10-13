@@ -160,6 +160,53 @@ table.results tr.flag td { color: var(--bad); }
     7% 50%);
 }
 
+.stimulus.triangle {
+  clip-path: polygon(50% 10%, 
+  90% 90%, 
+  10% 90%);
+}
+
+.stimulus.pentagon {
+  clip-path: polygon(50% 5%,
+  100% 38%,
+  81% 100%,
+  19% 100%,
+  0% 38%);
+}
+
+.stimulus.hexagon {
+  clip-path: polygon(25% 5%,
+  75% 5%,
+  100% 50%,
+  75% 95%,
+  25% 95%,
+  0% 50%);
+}
+
+.stimulus.star {
+  clip-path: polygon(50% 0,
+  61% 35%,
+  98% 35%,
+  68% 57%,
+  79% 91%,
+  50% 70%,
+  21% 91%,
+  32% 57%,
+  2% 35%,
+  39% 35%);
+}
+
+.stimulus.oval {
+  clip-path: ellipse(40% 50% at 50% 50%);
+}
+
+.stimulus.rhombus {
+  clip-path: polygon(25% 0%,
+  100% 0%,
+  75% 100%,
+  0% 100%);
+}
+
 .header-info {
   display: flex;
   align-items: center;
