@@ -20,6 +20,7 @@
   const soundToggle = document.getElementById('soundToggle');
   const intro = document.getElementById('intro');
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
+  const missionText = document.getElementById('missionText');
   let flickerInterval = null;
 
   // Current stage of the experiment:
@@ -119,6 +120,8 @@
       finishExperiment();
       return;
     }
+
+    missionText = "Mission " + (trialIndex + 1) + ": Find a shape"; 
     setTick(trialIndex, 'current');
     phase = 'armed';
     resetStimulusVisual();
