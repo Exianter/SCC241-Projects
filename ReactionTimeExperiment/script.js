@@ -22,6 +22,7 @@
   const missionText = document.getElementById('missionText');
   let flickerInterval = null;
   let targetShape = null;
+  let currentShape = null;
 
   // Current stage of the experiment:
   // idle = waiting to start
@@ -103,7 +104,7 @@
     flickerInterval = setInterval(() => {
       SHAPES.forEach(s => stimulus.classList.remove(s));
       const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-      stimulus.classList.add(randomShape);
+      stimulus.classList.add(currentShape);
     }, 130);
 
     const wait = MIN_WAIT + Math.random() * (MAX_WAIT - MIN_WAIT);
@@ -115,6 +116,8 @@
       clearInterval(flickerInterval);
       flickerInterval = null;
     }
+
+    //
     phase = 'go';
     stimulus.classList.remove('armed');
     stimulus.classList.add('go');
