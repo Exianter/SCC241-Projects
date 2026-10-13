@@ -57,16 +57,26 @@ body {
 .tick.bad { background: var(--bad); }
 .tick.miss { background: var(--muted-dim); }
 
-.stage { display: flex; flex-direction: column; align-items: center; padding: 18px 0 6px; }
+.stage { display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  padding: 18px 0; 
+  min-height: 220px;
+}
+
 
 /* This create the circle */
 .stimulus {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   background: var(--idle);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;
   transition: background 0.06s linear, transform 0.15s ease;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
 }
 .stimulus:active { transform: scale(0.98); }
 .stimulus.armed { background: var(--armed); }
@@ -139,25 +149,25 @@ table.results tr.flag td { color: var(--bad); }
 /*shape variations*/
 .stimulus.square {
   border-radius: 0;
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
 }
 
 .stimulus.rectangle {
   border-radius: 6px;
-  width: 180px;
+  width: 170px;
   height: 90px;
 }
 
 .stimulus.circle {
   border-radius: 50%;
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
 }
 
 .stimulus.diamond {
   border-radius: 6px;
   transform: rotate(45deg);
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
 }
