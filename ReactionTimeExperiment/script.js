@@ -20,6 +20,7 @@
   const intro = document.getElementById('intro');
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
   const missionText = document.getElementById('missionText');
+  const mistakeCount = document.getElementById('mistakeCount');
   let flickerInterval = null;
   let targetShape = null;
   let currentShape = null;
@@ -39,6 +40,7 @@
   let timeoutTimer = null;
   let goTime = 0;
   let falseStarts = 0;
+  let mistakes = 0;
   let results = []; // { trial, rtMs, status }
 
   function buildTicks() {
@@ -75,6 +77,8 @@
     resultsBlock.style.display = 'none';
     results = [];
     falseStarts = 0;
+    mistakes = 0;
+    mistakeCount.textContent = mistakes;
     trialIndex = 0; //start from trial 1
     buildTicks();
     primaryBtn.style.display = 'none';
@@ -173,7 +177,7 @@
     }, 900);
   }
 
-  
+
   function onTrigger() {
     if (phase === 'armed') {
       falseStart();
