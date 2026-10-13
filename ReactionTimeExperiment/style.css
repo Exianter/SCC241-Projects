@@ -63,7 +63,6 @@ body {
 .stimulus {
   width: 160px;
   height: 160px;
-  border-radius: 50%;
   background: var(--idle);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;
   transition: background 0.06s linear, transform 0.15s ease;
@@ -135,4 +134,30 @@ table.results tr.flag td { color: var(--bad); }
 @media (max-width: 420px) {
   .console { padding: 22px 18px 18px; }
   .stimulus { width: 130px; height: 130px; }
+}
+
+/*shape variations*/
+.stimulus.square {
+  border-radius: 0;
+  width: 150px;
+  height: 150px;
+}
+
+.stimulus.rectangle {
+  border-radius: 6px;
+  width: 200px;
+  height: 100px;
+}
+
+.stimulus.circle {
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+}
+
+.stimulus.diamond {
+  border-radius: 6px;
+  transform: rotate(45deg);
+  width: 120px;
+  height: 120px;
 }

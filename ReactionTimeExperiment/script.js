@@ -19,6 +19,7 @@
   const statMax = document.getElementById('statMax');
   const soundToggle = document.getElementById('soundToggle');
   const intro = document.getElementById('intro');
+  const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
 
   // Current stage of the experiment:
   // idle = waiting to start
