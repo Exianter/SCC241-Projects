@@ -159,3 +159,18 @@ table.results tr.flag td { color: var(--bad); }
     50% 93%,
     7% 50%);
 }
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mistakes {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mistakes strong {
+  color: var(--bad);
+}
