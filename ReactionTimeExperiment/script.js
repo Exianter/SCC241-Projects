@@ -107,7 +107,7 @@
 
     flickerInterval = setInterval(() => {
       SHAPES.forEach(s => stimulus.classList.remove(s));
-      const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      currentShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
       stimulus.classList.add(currentShape);
     }, 130);
 
@@ -147,7 +147,25 @@
     status.textContent = 'GO — press SPACE';
     status.classList.add('emph');
     goTime = performance.now();
-    timeoutTimer = setTimeout(() => registerResponse(null), RESPONSE_TIMEOUT);
+    timeoutTimer = setTimeout(handleNoResponse, RESPONSE_TIMEOUT);
+  }
+
+  function handleNoResponse() {
+    phase = 'between';
+
+    if (currentShape !== targetShape) {
+      status.textContent = 'Correct - wait for the target';
+      status.classList.remove('emph');
+      readout.textContent = '';
+      setTimeout(() => {
+        phase = 'idle';
+        repeatTrial();
+      }, 700);
+
+      return;
+    }
+
+    registerResponse(null);
   }
 
   //  Handle a response that is too early
