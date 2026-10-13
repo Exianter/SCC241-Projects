@@ -145,8 +145,8 @@ table.results tr.flag td { color: var(--bad); }
 
 .stimulus.rectangle {
   border-radius: 6px;
-  width: 200px;
-  height: 100px;
+  width: 180px;
+  height: 90px;
 }
 
 .stimulus.circle {
