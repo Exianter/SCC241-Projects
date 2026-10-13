@@ -61,8 +61,8 @@ body {
 
 /* This create the circle */
 .stimulus {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   background: var(--idle);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;
   transition: background 0.06s linear, transform 0.15s ease;
