@@ -19,6 +19,7 @@
   const statMax = document.getElementById('statMax');
   const intro = document.getElementById('intro');
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
+  const TARGET_CHANCE = 0.70;
   const missionText = document.getElementById('missionText');
   const mistakeCount = document.getElementById('mistakeCount');
   let flickerInterval = null;
@@ -140,7 +141,17 @@
       flickerInterval = null;
     }
 
-    //
+    SHAPES.forEach(s => stimulus.classList.remove(s));
+
+    if (Math.random() < TARGET_CHANCE) {
+      currentShape = targetShape;
+    } else {
+      const wrongShape = SHAPES.filter(shape => shape !== targetShape);
+      currentShape = wrongShape[Math.floor(Math.random() * wrongShape.length)];
+    }
+
+    stimulus.classList.add(currentShape);
+    
     phase = 'go';
     stimulus.classList.remove('armed');
     stimulus.classList.add('go');
