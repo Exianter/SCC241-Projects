@@ -17,7 +17,6 @@
   const statAvg = document.getElementById('statAvg');
   const statMin = document.getElementById('statMin');
   const statMax = document.getElementById('statMax');
-  const soundToggle = document.getElementById('soundToggle');
   const intro = document.getElementById('intro');
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle'];
   const missionText = document.getElementById('missionText');
@@ -39,7 +38,6 @@
   let goTime = 0;
   let falseStarts = 0;
   let results = []; // { trial, rtMs, status }
-  let audioCtx = null;
 
   function buildTicks() {
   // Remove any existing trial indicators
@@ -58,38 +56,6 @@
   function setTick(i, cls) {
     const el = document.getElementById('tick-' + i);
     if (el) el.className = 'tick ' + cls;
-  }
-
-
-  // Play a beep sound
-  function beep() {
-    //if toggle is not checked, do nothing
-    if (!soundToggle.checked) return;
-    
-    try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            // Resume the audio system if it is paused
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-            // Create a sound oscillator
-      const osc = audioCtx.createOscillator();
-            // Create volume control
-      const gain = audioCtx.createGain();
-            // Use a simple sine-wave sound
-      osc.type = 'sine';
-            // Set the sound frequency
-      osc.frequency.value = 880;
-            // Increase the volume quickly
-      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-      //reduce volume gain
-      gain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.16);
-      osc.connect(gain).connect(audioCtx.destination);
-      
-      osc.start();       // Start the sound
-      osc.stop(audioCtx.currentTime + 0.18);//stop sounds after 0.18s
-    } catch (e) {
-      // audio unavailable (catching error)
-    }
   }
 
   function resetStimulusVisual() {
@@ -150,7 +116,6 @@
     stimulus.classList.add('go');
     status.textContent = 'GO — press SPACE';
     status.classList.add('emph');
-    beep();
     goTime = performance.now();
     timeoutTimer = setTimeout(() => registerResponse(null), RESPONSE_TIMEOUT);
   }
