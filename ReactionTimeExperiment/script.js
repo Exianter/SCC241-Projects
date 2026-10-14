@@ -302,6 +302,8 @@
     });
     lines.push('');
     lines.push('false_starts,' + falseStarts);
+    //mistakes in csv output
+    lines.push('mistakes,'+mistakes);
     return lines.join('\n');
   }
 
