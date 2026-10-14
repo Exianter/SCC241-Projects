@@ -97,6 +97,7 @@
       return;
     }
 
+    missionText.style.display = '';
     targetShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
 
     missionText.textContent = "Mission " + (trialIndex + 1) + ": Is the shape a " + targetShape + "?";
@@ -218,6 +219,7 @@
   function finishExperiment() {
     phase = 'done';
     resetStimulusVisual();
+    missionText.style.display = 'none';
     status.textContent = 'Experiment complete';
     status.classList.add('emph');
     readout.textContent = '';
