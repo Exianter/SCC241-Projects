@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reaction Test</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -13,23 +13,19 @@
     <h1>Reaction Test</h1>
 
     <div class="header-info">
-      <span class="mistakes">
-        Mistakes: <strong id="mistakeCount">0</strong>
-      </span>
-
       <span class="mode">10 trials</span>
     </div>
   </div>
   <p class="subline" id="intro">
-    Each trial arms after a short wait, then fires a colour change. Press <strong>SPACE</strong> (or click the circle) the instant it fires. Ten valid
-    trials, then your results export as a .csv.
+    Each trial arms after a short wait, then shows a shape. Press <strong>G</strong> if it matches the mission or <strong>H</strong> if it does not.
+    Ten trials, then your results export as a .csv.
   </p>
 
   <div class="ticks" id="ticks"></div>
 
   <div class="stage">
     <h2 class="mission-text" id="missionText"></h2>
-    <div class="stimulus" id="stimulus" role="button" tabindex="0" aria-label="Reaction stimulus"></div>
+    <div class="stimulus" id="stimulus" aria-label="Reaction stimulus"></div>
     <div class="status" id="status">Press start when you're ready</div>
     <div class="readout" id="readout"></div>
   </div>
@@ -51,8 +47,13 @@
       <button class="btn" id="exportBtn">Export .csv</button>
     </div>
   </div>
+
+  <div class="scoreboard" aria-live="polite">
+    <span class="correct-count">Correct: <strong id="correctCount">0</strong></span>
+    <span class="incorrect-count">Incorrect: <strong id="incorrectCount">0</strong></span>
+  </div>
 </div>
 
-<script src="script.js?v=2"></script>
+<script src="script.js?v=3"></script>
 </body>
 </html>

@@ -73,13 +73,11 @@ body {
   background: var(--idle);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;
   transition: background 0.06s linear, transform 0.15s ease;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
 }
-.stimulus:active { transform: scale(0.98); }
 .stimulus.armed { background: var(--armed); }
 .stimulus.go { background: var(--go); box-shadow: 0 0 40px 4px rgba(242,194,48,0.35); }
 .stimulus.bad-flash { background: var(--bad); box-shadow: 0 0 32px 2px rgba(229,72,77,0.35); }
@@ -213,11 +211,22 @@ table.results tr.flag td { color: var(--bad); }
   gap: 14px;
 }
 
-.mistakes {
+.scoreboard {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
   font-size: 12px;
   color: var(--muted);
 }
 
-.mistakes strong {
+.scoreboard strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.correct-count strong {
+  color: var(--good);
+}
+
+.incorrect-count strong {
   color: var(--bad);
 }

@@ -19,9 +19,9 @@
   const statMax = document.getElementById('statMax');
   const intro = document.getElementById('intro');
   const SHAPES = ['square', 'circle', 'diamond', 'rectangle','triangle','pentagon','hexagon','star','oval','rhombus'];
-  const TARGET_CHANCE = 0.70;
   const missionText = document.getElementById('missionText');
-  const mistakeCount = document.getElementById('mistakeCount');
+  const correctCount = document.getElementById('correctCount');
+  const incorrectCount = document.getElementById('incorrectCount');
   let flickerInterval = null;
   let targetShape = null;
   let currentShape = null;
@@ -41,7 +41,8 @@
   let timeoutTimer = null;
   let goTime = 0;
   let falseStarts = 0;
-  let mistakes = 0;
+  let correct = 0;
+  let incorrect = 0;
   let results = []; // { trial, rtMs, status }
 
   function buildTicks() {
@@ -78,8 +79,10 @@
     resultsBlock.style.display = 'none';
     results = [];
     falseStarts = 0;
-    mistakes = 0;
-    mistakeCount.textContent = mistakes;
+    correct = 0;
+    incorrect = 0;
+    correctCount.textContent = correct;
+    incorrectCount.textContent = incorrect;
     trialIndex = 0; //start from trial 1
     buildTicks();
     primaryBtn.style.display = 'none';
@@ -96,7 +99,7 @@
 
     targetShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
 
-    missionText.textContent = "Mission " + (trialIndex + 1) + ": Find a " + targetShape;
+    missionText.textContent = "Mission " + (trialIndex + 1) + ": Is the shape a " + targetShape + "?";
     
     setTick(trialIndex, 'current');
     phase = 'armed';
@@ -116,25 +119,6 @@
     armTimer = setTimeout(fireGo, wait);
   }
 
-  function repeatTrial() {
-    setTick(trialIndex, 'current');
-    phase = 'armed';
-    resetStimulusVisual();
-    stimulus.classList.add('armed');
-    status.textContent = 'Wait for it...';
-    status.classList.remove('emph');
-    readout.textContent = '';
-
-    flickerInterval = setInterval (() => {
-      SHAPES.forEach(s => stimulus.classList.remove(s));
-      currentShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-      stimulus.classList.add(currentShape);
-    }, 130);
-
-    const wait = MIN_WAIT + Math.random() * (MAX_WAIT - MIN_WAIT);
-    armTimer = setTimeout(fireGo, wait);
-  }
-
   function fireGo() {
     if (flickerInterval) {
       clearInterval(flickerInterval);
@@ -143,40 +127,24 @@
 
     SHAPES.forEach(s => stimulus.classList.remove(s));
 
-    if (Math.random() < TARGET_CHANCE) {
-      currentShape = targetShape;
-    } else {
-      const wrongShape = SHAPES.filter(shape => shape !== targetShape);
-      currentShape = wrongShape[Math.floor(Math.random() * wrongShape.length)];
-    }
+    const otherShapes = SHAPES.filter(shape => shape !== targetShape);
+    currentShape = Math.random() < 0.5
+      ? targetShape
+      : otherShapes[Math.floor(Math.random() * otherShapes.length)];
 
     stimulus.classList.add(currentShape);
     
     phase = 'go';
     stimulus.classList.remove('armed');
     stimulus.classList.add('go');
-    status.textContent = 'GO — press SPACE';
+    status.textContent = 'GO — press G (same) or H (different)';
     status.classList.add('emph');
     goTime = performance.now();
     timeoutTimer = setTimeout(handleNoResponse, RESPONSE_TIMEOUT);
   }
 
   function handleNoResponse() {
-    phase = 'between';
-
-    if (currentShape !== targetShape) {
-      status.textContent = 'Correct - wait for the target';
-      status.classList.remove('emph');
-      readout.textContent = '';
-      setTimeout(() => {
-        phase = 'idle';
-        repeatTrial();
-      }, 700);
-
-      return;
-    }
-
-    registerResponse(null);
+    registerResponse(null, false);
   }
 
   //  Handle a response that is too early
@@ -197,23 +165,34 @@
   }
 
   // Record the user's response
-  function registerResponse(rtMs) {
+  function registerResponse(rtMs, isCorrect) {
     clearTimeout(timeoutTimer);
     phase = 'between';
     resetStimulusVisual();
 
     const trialNum = trialIndex + 1;
     if (rtMs === null) {
+      incorrect++;
+      incorrectCount.textContent = incorrect;
       results.push({ trial: trialNum, rtMs: null, status: 'no response' });
       setTick(trialIndex, 'miss');
       status.textContent = 'No response recorded';
       status.classList.remove('emph');
       readout.innerHTML = '—';
     } else {
-      results.push({ trial: trialNum, rtMs: Math.round(rtMs), status: 'ok' });
-      const cls = rtMs < 300 ? 'good' : rtMs < 500 ? 'mid' : 'bad';
-      setTick(trialIndex, cls);
+      const outcome = isCorrect ? 'correct' : 'incorrect';
+      results.push({ trial: trialNum, rtMs: Math.round(rtMs), status: outcome });
+      if (isCorrect) {
+        correct++;
+        correctCount.textContent = correct;
+        setTick(trialIndex, 'good');
+      } else {
+        incorrect++;
+        incorrectCount.textContent = incorrect;
+        setTick(trialIndex, 'bad');
+      }
       status.textContent = 'Trial ' + trialNum + ' of ' + TOTAL_TRIALS;
+      status.textContent += isCorrect ? ' — Correct' : ' — Incorrect';
       status.classList.remove('emph');
       readout.innerHTML = Math.round(rtMs) + '<span class="unit">ms</span>';
     }
@@ -225,34 +204,14 @@
     }, 900);
   }
 
-  function wrongShape() {
-    clearTimeout(timeoutTimer);
-    mistakes++;
-    mistakeCount.textContent = mistakes;
-    phase = "between";
-    stimulus.classList.remove('go');
-    stimulus.classList.add('bad-flash');
-    status.textContent = 'Wrong shape - find a ' + targetShape;
-    status.classList.remove('emph');
-
-    readout.textContent = '';
-
-    setTimeout(() => {
-      phase = 'idle';
-      repeatTrial();
-    }, 900);
-  }
-
-  function onTrigger() {
+  function onResponse(key) {
     if (phase === 'armed') {
       falseStart();
     } else if (phase === 'go') {
-      if (currentShape === targetShape) {
-        const rt = performance.now() - goTime;
-        registerResponse(rt);
-      } else {
-        wrongShape();
-      }
+      const isSame = currentShape === targetShape;
+      const isCorrect = (key === 'g' && isSame) || (key === 'h' && !isSame);
+      const rt = performance.now() - goTime;
+      registerResponse(rt, isCorrect);
     }
   }
 
@@ -302,8 +261,8 @@
     });
     lines.push('');
     lines.push('false_starts,' + falseStarts);
-    //mistakes in csv output
-    lines.push('mistakes,'+mistakes);
+    lines.push('correct,' + correct);
+    lines.push('incorrect,' + incorrect);
     return lines.join('\n');
   }
 
@@ -327,16 +286,11 @@
   restartBtn.addEventListener('click', startExperiment);
   exportBtn.addEventListener('click', exportCsv);
 
-  stimulus.addEventListener('click', onTrigger);
-
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.key === ' ') {
+    const key = e.key.toLowerCase();
+    if (key === 'g' || key === 'h') {
       e.preventDefault();
-      if (phase === 'idle') {
-        startExperiment();
-      } else {
-        onTrigger();
-      }
+      onResponse(key);
     }
   });
 })();
