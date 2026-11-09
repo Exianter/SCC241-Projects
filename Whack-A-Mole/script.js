@@ -74,6 +74,7 @@ function showMole() {
 // called when the player clicks the mole: scores a point and removes it
 function whackMole() {
   if (state !== 'mole-visible') return;
+  const hitsound = new Audio('whack.mp3'); hitSound.play();
 
   score++;
   scoreEl.textContent = 'Score: ' + score;
