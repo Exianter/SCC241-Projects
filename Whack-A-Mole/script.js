@@ -4,7 +4,6 @@ const MIN_DELAY = 500;     // shortest possible wait (ms) before a mole appears
 const MAX_DELAY = 2000;    // longest possible wait (ms) before a mole appears
 const MIN_SIZE = 40;       // smallest mole diameter (px)
 const MAX_SIZE = 100;      // largest mole diameter (px)
-const DUAL_MOLE_ROUNDS = 10;
 const ROUND_TIME_LIMIT = 2000;
 const STYLE_RANKS = [
   'Dismal',
@@ -67,11 +66,9 @@ function startNextRound() {
   delayTimer = setTimeout(showMole, delay);
 }
 
-// creates one or two targets for the current round
+// creates positive and negative targets for the current round
 function showMole() {
-  const moleTypes = round <= DUAL_MOLE_ROUNDS
-    ? ['positive', 'negative']
-    : ['positive'];
+  const moleTypes = ['positive', 'negative'];
 
   currentMoles = moleTypes.map((type, index) => {
     const size = randomBetween(MIN_SIZE, MAX_SIZE);
@@ -102,9 +99,7 @@ function showMole() {
   });
 
   state = 'mole-visible';
-  messageEl.textContent = moleTypes.length === 2
-    ? 'Choose a mole within 2 seconds: green adds points, red subtracts points.'
-    : 'Hit the mole within 2 seconds.';
+  messageEl.textContent = 'Choose a mole within 2 seconds: green adds points, red subtracts points.';
   roundTimer = setTimeout(() => finishRound(true), ROUND_TIME_LIMIT);
 }
 
