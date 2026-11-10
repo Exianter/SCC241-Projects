@@ -4,10 +4,20 @@ const MIN_DELAY = 500;     // shortest possible wait (ms) before a mole appears
 const MAX_DELAY = 2000;    // longest possible wait (ms) before a mole appears
 const MIN_SIZE = 40;       // smallest mole diameter (px)
 const MAX_SIZE = 100;      // largest mole diameter (px)
+const STYLE_RANKS = [
+  'Dismal',
+  'Crazy',
+  'Badass',
+  'Apocalyptic!',
+  'Savage!',
+  'Sick Skills!!',
+  "Smokin' Sexy Style!!!"
+];
 
 // ---- game state ----
 let score = 0;
 let round = 0;
+let multiplier = 1;
 let currentMole = null;    // reference to the mole element currently on screen
 let delayTimer = null;     // the setTimeout id for the "mole appears" delay
 // state can be: 'idle' | 'waiting' | 'mole-visible' | 'return' | 'ended'
@@ -15,8 +25,13 @@ let state = 'idle';
 
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
+const styleRankEl = document.getElementById('styleRank');
 const roundsEl = document.getElementById('rounds');
 const messageEl = document.getElementById('message');
+
+function updateStyleRank() {
+  styleRankEl.textContent = 'Style: ' + STYLE_RANKS[multiplier - 1] + ' (' + multiplier + 'x)';
+}
 
 // picks a random whole number between min and max (inclusive)
 function randomBetween(min, max) {
@@ -27,7 +42,9 @@ function randomBetween(min, max) {
 function startGame() {
   score = 0;
   round = 0;
+  multiplier = 1;
   scoreEl.textContent = 'Score: 0';
+  updateStyleRank();
   roundsEl.textContent = 'Round: 0 / ' + TOTAL_ROUNDS;
   messageEl.textContent = '';
   startBtn.textContent = 'Start';
@@ -75,8 +92,10 @@ function showMole() {
 function whackMole() {
   if (state !== 'mole-visible') return;
 
-  score++;
+  score += multiplier;
   scoreEl.textContent = 'Score: ' + score;
+  multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
+  updateStyleRank();
 
   currentMole.remove();
   currentMole = null;
