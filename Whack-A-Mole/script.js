@@ -41,6 +41,7 @@ const styleRankEl = document.getElementById('styleRank');
 const roundsEl = document.getElementById('rounds');
 const livesEl = document.getElementById('lives');
 const messageEl = document.getElementById('message');
+const stageEl = document.getElementById('stage');
 
 function playHitSound() {
   const hitSound = new Audio('hit.mp3');
@@ -50,7 +51,7 @@ function playHitSound() {
   });
 }
 
-//global click listener
+// global click listener
 document.addEventListener('click', () => {
   playHitSound();
 });
@@ -62,6 +63,46 @@ function updateStyleRank() {
 // picks a random whole number between min and max (inclusive)
 function randomBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// returns the current stage based on the round
+function getCurrentStage() {
+    return Math.ceil(round / ROUNDS_PER_STAGE);
+}
+
+// calculates mole size based on screen dimensions and stage
+function getMoleSize() {
+    const stage = getCurrentStage();
+    const screenSize = Math.min(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+    const difficulty = Math.pow(
+        DIFFICULTY_FACTOR,
+        stage - 1
+    );
+
+    return Math.max(
+        MIN_MOLE_SIZE,
+        Math.round(screenSize * BASE_SIZE_RATIO * difficulty)
+    );
+}
+
+// calculates how long the mole stays visible
+function getRoundTimeLimit() {
+    const stage = getCurrentStage();
+    return Math.round(
+        ROUND_TIME_LIMIT *
+        Math.pow(DIFFICULTY_FACTOR, stage - 1)
+    );
+}
+
+// updates the stage display
+function updateStage() {
+    const stage = getCurrentStage();
+    stageEl.textContent =
+        'Stage: ' + stage + ' / ' + TOTAL_STAGES;
 }
 
 // resets score/round counters and kicks off round 1
