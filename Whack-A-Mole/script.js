@@ -1,20 +1,27 @@
 // ---- settings ----
-const TOTAL_ROUNDS = 60;   // game ends after this many rounds
-const MIN_DELAY = 500;     // shortest possible wait (ms) before a mole appears
-const MAX_DELAY = 2000;    // longest possible wait (ms) before a mole appears
-const MIN_SIZE = 40;       // smallest mole diameter (px)
-const MAX_SIZE = 100;      // largest mole diameter (px)
-const DUAL_MOLE_ROUNDS = 10;
+const TOTAL_ROUNDS = 60;
+const ROUNDS_PER_STAGE = 10;
+const MIN_DELAY = 500;
+const MAX_DELAY = 2000;
 const ROUND_TIME_LIMIT = 2000;
 const STARTING_LIVES = 5;
+const TOTAL_STAGES = TOTAL_ROUNDS / ROUNDS_PER_STAGE;
+
+// Difficulty progression
+const DIFFICULTY_FACTOR = 0.85;
+
+// Mole size relative to the screen
+const BASE_SIZE_RATIO = 0.14;
+const MIN_MOLE_SIZE = 24;
+const DUAL_MOLE_ROUNDS = 10;
 const STYLE_RANKS = [
-  'Dismal',
-  'Crazy',
-  'Badass',
-  'Apocalyptic!',
-  'Savage!',
-  'Sick Skills!!',
-  "Smokin' Sexy Style!!!"
+    'Dismal',
+    'Crazy',
+    'Badass',
+    'Apocalyptic!',
+    'Savage!',
+    'Sick Skills!!',
+    "Smokin' Sexy Style!!!"
 ];
 
 // ---- game state ----
@@ -34,6 +41,19 @@ const styleRankEl = document.getElementById('styleRank');
 const roundsEl = document.getElementById('rounds');
 const livesEl = document.getElementById('lives');
 const messageEl = document.getElementById('message');
+
+function playHitSound() {
+  const hitSound = new Audio('hit.mp3');
+  hitSound.currentTime = 0;
+  hitSound.play().catch(error => {
+    console.log('Sound playback failed:', error);
+  });
+}
+
+//global click listener
+document.addEventListener('click', () => {
+  playHitSound();
+});
 
 function updateStyleRank() {
   styleRankEl.textContent = 'Style: ' + STYLE_RANKS[multiplier - 1] + ' (' + multiplier + 'x)';
@@ -114,8 +134,6 @@ function showMole() {
 // applies a target's score and finishes the round after one hit
 function whackMole(mole) {
   if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
-  const hitSound = new Audio('hit.mp3');
-  hitSound.play();
 
   if (mole.dataset.scoreType === 'positive') {
     score += multiplier;
