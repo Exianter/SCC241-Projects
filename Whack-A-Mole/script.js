@@ -4,6 +4,8 @@ const MIN_DELAY = 500;     // shortest possible wait (ms) before a mole appears
 const MAX_DELAY = 2000;    // longest possible wait (ms) before a mole appears
 const MIN_SIZE = 40;       // smallest mole diameter (px)
 const MAX_SIZE = 100;      // largest mole diameter (px)
+const DUAL_MOLE_ROUNDS = 10;
+const ROUND_TIME_LIMIT = 2000;
 const STYLE_RANKS = [
   'Dismal',
   'Crazy',
@@ -18,8 +20,9 @@ const STYLE_RANKS = [
 let score = 0;
 let round = 0;
 let multiplier = 1;
-let currentMole = null;    // reference to the mole element currently on screen
+let currentMoles = [];
 let delayTimer = null;     // the setTimeout id for the "mole appears" delay
+let roundTimer = null;
 // state can be: 'idle' | 'waiting' | 'mole-visible' | 'return' | 'ended'
 let state = 'idle';
 
@@ -64,49 +67,81 @@ function startNextRound() {
   delayTimer = setTimeout(showMole, delay);
 }
 
-// creates a mole element at a random position and random size,
-// then adds it to the page
+// creates one or two targets for the current round
 function showMole() {
-  const size = randomBetween(MIN_SIZE, MAX_SIZE);
+  const moleTypes = round <= DUAL_MOLE_ROUNDS
+    ? ['positive', 'negative']
+    : ['positive'];
 
-  // keep the mole fully inside the viewport
-  const maxX = window.innerWidth - size;
-  const maxY = window.innerHeight - size;
-  const x = randomBetween(0, Math.max(0, maxX));
-  const y = randomBetween(0, Math.max(0, maxY));
+  currentMoles = moleTypes.map((type, index) => {
+    const size = randomBetween(MIN_SIZE, MAX_SIZE);
+    const maxX = window.innerWidth - size;
+    const maxY = window.innerHeight - size;
+    const regionWidth = window.innerWidth / moleTypes.length;
+    const minX = moleTypes.length === 2
+      ? Math.min(Math.max(0, maxX), Math.floor(index * regionWidth))
+      : 0;
+    const maxRegionX = moleTypes.length === 2
+      ? Math.min(Math.max(0, maxX), Math.floor((index + 1) * regionWidth - size))
+      : Math.max(0, maxX);
+    const maxPositionX = Math.max(minX, maxRegionX);
+    const x = randomBetween(minX, maxPositionX);
+    const y = randomBetween(0, Math.max(0, maxY));
 
-  const mole = document.createElement('div');
-  mole.className = 'mole';
-  mole.style.width = size + 'px';
-  mole.style.height = size + 'px';
-  mole.style.left = x + 'px';
-  mole.style.top = y + 'px';
-  mole.addEventListener('click', whackMole);
+    const mole = document.createElement('div');
+    mole.className = 'mole ' + type;
+    mole.dataset.scoreType = type;
+    mole.setAttribute('aria-label', type + ' score mole');
+    mole.style.width = size + 'px';
+    mole.style.height = size + 'px';
+    mole.style.left = x + 'px';
+    mole.style.top = y + 'px';
+    mole.addEventListener('click', () => whackMole(mole));
+    document.body.appendChild(mole);
+    return mole;
+  });
 
-  document.body.appendChild(mole);
-  currentMole = mole;
   state = 'mole-visible';
+  messageEl.textContent = moleTypes.length === 2
+    ? 'Choose a mole within 2 seconds: green adds points, red subtracts points.'
+    : 'Hit the mole within 2 seconds.';
+  roundTimer = setTimeout(() => finishRound(true), ROUND_TIME_LIMIT);
 }
 
-// called when the player clicks the mole: scores a point and removes it
-function whackMole() {
-  if (state !== 'mole-visible') return;
+// applies a target's score and finishes the round after one hit
+function whackMole(mole) {
+  if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
 
-  score += multiplier;
+  if (mole.dataset.scoreType === 'positive') {
+    score += multiplier;
+    multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
+  } else {
+    score -= 1;
+    multiplier = Math.max(1, multiplier - 1);
+  }
   scoreEl.textContent = 'Score: ' + score;
-  multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
   updateStyleRank();
 
-  currentMole.remove();
-  currentMole = null;
+  finishRound(false);
+}
+
+function finishRound(timedOut) {
+  clearTimeout(roundTimer);
+  if (timedOut) {
+    multiplier = 1;
+    updateStyleRank();
+  }
+  currentMoles.forEach(mole => mole.remove());
+  currentMoles = [];
 
   if (round >= TOTAL_ROUNDS) {
     endGame();
   } else {
-    // wait for the player to move the mouse back to the start button
     state = 'return';
     startBtn.style.display = 'inline-block';
-    messageEl.textContent = 'Move your mouse back to Start for the next round';
+    messageEl.textContent = timedOut
+      ? "Time's up! Move your mouse back to Start for the next round."
+      : 'Move your mouse back to Start for the next round';
   }
 }
 
@@ -121,10 +156,9 @@ function onStartHover() {
 function endGame() {
   state = 'ended';
   clearTimeout(delayTimer);
-  if (currentMole) {
-    currentMole.remove();
-    currentMole = null;
-  }
+  clearTimeout(roundTimer);
+  currentMoles.forEach(mole => mole.remove());
+  currentMoles = [];
   startBtn.style.display = 'inline-block';
   startBtn.textContent = 'Play Again';
   messageEl.textContent = 'Game over! Final score: ' + score + ' / ' + round;

@@ -14,6 +14,7 @@ html, body {
   left: 10px;
   font-size: 18px;
   z-index: 10;
+  pointer-events: none;
 }
 
 #styleRank {
@@ -48,4 +49,12 @@ html, body {
   background: #5a3d1f;
   cursor: pointer;
   z-index: 5;
+}
+
+.mole.positive {
+  background: #32834a;
+}
+
+.mole.negative {
+  background: #b63838;
 }
