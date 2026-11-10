@@ -3,7 +3,7 @@ html, body {
   height: 100%;
   margin: 0;
   overflow: hidden; /* moles are positioned absolutely, no scrollbars needed */
-  background: #f2f2f2;
+  background: radial-gradient(circle, #8bc34a 0%, #558b2f 100%);
   font-family: sans-serif;
 }
 
