@@ -114,6 +114,7 @@ function startGame() {
   scoreEl.textContent = 'Score: 0';
   updateStyleRank();
   roundsEl.textContent = 'Round: 0 / ' + TOTAL_ROUNDS;
+  stageEl.textContent = 'Stage: 0 / ' + TOTAL_STAGES;
   livesEl.textContent = 'Lives: ' + lives;
   messageEl.textContent = '';
   startBtn.textContent = 'Start';
@@ -123,14 +124,29 @@ function startGame() {
 // begins one round: hides the start button and waits a random delay
 // before showing the mole somewhere random on screen
 function startNextRound() {
-  round++;
-  roundsEl.textContent = 'Round: ' + round + ' / ' + TOTAL_ROUNDS;
-  state = 'waiting';
-  startBtn.style.display = 'none';
-  messageEl.textContent = '';
+    round++;
+    roundsEl.textContent =
+        'Round: ' + round + ' / ' + TOTAL_ROUNDS;
+    updateStage();
+    state = 'waiting';
+    startBtn.style.display = 'none';
+    messageEl.textContent = '';
+    const stage = getCurrentStage();
+    const difficulty = Math.pow(
+        DIFFICULTY_FACTOR,
+        stage - 1
+    );
 
-  const delay = randomBetween(MIN_DELAY, MAX_DELAY);
-  delayTimer = setTimeout(showMole, delay);
+    // mole appears faster in later stages
+    const minDelay = Math.round(MIN_DELAY * difficulty);
+    const maxDelay = Math.round(MAX_DELAY * difficulty);
+
+    const delay = randomBetween(
+        minDelay,
+        Math.max(minDelay, maxDelay)
+    );
+
+    delayTimer = setTimeout(showMole, delay);
 }
 
 // creates one or two targets for the current round
@@ -140,7 +156,7 @@ function showMole() {
     : ['positive'];
 
   currentMoles = moleTypes.map((type, index) => {
-    const size = randomBetween(MIN_SIZE, MAX_SIZE);
+    const size = getMoleSize();
     const maxX = window.innerWidth - size;
     const maxY = window.innerHeight - size;
     const regionWidth = window.innerWidth / moleTypes.length;
@@ -169,7 +185,10 @@ function showMole() {
   });
 
   state = 'mole-visible';
-  roundTimer = setTimeout(() => finishRound(true), ROUND_TIME_LIMIT);
+  roundTimer = setTimeout(
+    () => finishRound(true),
+    getRoundTimeLimit()
+  );
 }
 
 // applies a target's score and finishes the round after one hit
