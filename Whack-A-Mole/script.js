@@ -4,6 +4,7 @@ const MIN_DELAY = 500;     // shortest possible wait (ms) before a mole appears
 const MAX_DELAY = 2000;    // longest possible wait (ms) before a mole appears
 const MIN_SIZE = 40;       // smallest mole diameter (px)
 const MAX_SIZE = 100;      // largest mole diameter (px)
+const DUAL_MOLE_ROUNDS = 10;
 const ROUND_TIME_LIMIT = 2000;
 const STYLE_RANKS = [
   'Dismal',
@@ -66,9 +67,11 @@ function startNextRound() {
   delayTimer = setTimeout(showMole, delay);
 }
 
-// creates positive and negative targets for the current round
+// creates one or two targets for the current round
 function showMole() {
-  const moleTypes = ['positive', 'negative'];
+  const moleTypes = round <= DUAL_MOLE_ROUNDS
+    ? ['positive', 'negative']
+    : ['positive'];
 
   currentMoles = moleTypes.map((type, index) => {
     const size = randomBetween(MIN_SIZE, MAX_SIZE);
@@ -83,7 +86,8 @@ function showMole() {
       : Math.max(0, maxX);
     const maxPositionX = Math.max(minX, maxRegionX);
     const x = randomBetween(minX, maxPositionX);
-    const y = randomBetween(0, Math.max(0, maxY));
+    const HUD_HEIGHT = 130;
+    const y = randomBetween(HUD_HEIGHT, Math.max(HUD_HEIGHT, maxY));
 
     const mole = document.createElement('div');
     mole.className = 'mole ' + type;
@@ -99,13 +103,17 @@ function showMole() {
   });
 
   state = 'mole-visible';
-  messageEl.textContent = 'Choose a mole within 2 seconds: green adds points, red subtracts points.';
+  messageEl.textContent = moleTypes.length === 2
+    ? 'Choose a mole within 2 seconds: green adds points, red subtracts points.'
+    : 'Hit the mole within 2 seconds.';
   roundTimer = setTimeout(() => finishRound(true), ROUND_TIME_LIMIT);
 }
 
 // applies a target's score and finishes the round after one hit
 function whackMole(mole) {
   if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
+  const hitSound = new Audio('hit.mp3');
+  hitSound.play();
 
   if (mole.dataset.scoreType === 'positive') {
     score += multiplier;
