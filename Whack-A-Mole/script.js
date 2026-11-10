@@ -6,6 +6,7 @@ const MIN_SIZE = 40;       // smallest mole diameter (px)
 const MAX_SIZE = 100;      // largest mole diameter (px)
 const DUAL_MOLE_ROUNDS = 10;
 const ROUND_TIME_LIMIT = 2000;
+const STARTING_LIVES = 5;
 const STYLE_RANKS = [
   'Dismal',
   'Crazy',
@@ -19,6 +20,7 @@ const STYLE_RANKS = [
 // ---- game state ----
 let score = 0;
 let round = 0;
+let lives = STARTING_LIVES;
 let multiplier = 1;
 let currentMoles = [];
 let delayTimer = null;     // the setTimeout id for the "mole appears" delay
@@ -30,6 +32,7 @@ const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
 const styleRankEl = document.getElementById('styleRank');
 const roundsEl = document.getElementById('rounds');
+const livesEl = document.getElementById('lives');
 const messageEl = document.getElementById('message');
 
 function updateStyleRank() {
@@ -45,10 +48,12 @@ function randomBetween(min, max) {
 function startGame() {
   score = 0;
   round = 0;
+  lives = STARTING_LIVES;
   multiplier = 1;
   scoreEl.textContent = 'Score: 0';
   updateStyleRank();
   roundsEl.textContent = 'Round: 0 / ' + TOTAL_ROUNDS;
+  livesEl.textContent = 'Lives: ' + lives;
   messageEl.textContent = '';
   startBtn.textContent = 'Start';
   startNextRound();
@@ -103,9 +108,6 @@ function showMole() {
   });
 
   state = 'mole-visible';
-  messageEl.textContent = moleTypes.length === 2
-    ? 'Choose a mole within 2 seconds: green adds points, red subtracts points.'
-    : 'Hit the mole within 2 seconds.';
   roundTimer = setTimeout(() => finishRound(true), ROUND_TIME_LIMIT);
 }
 
@@ -128,23 +130,25 @@ function whackMole(mole) {
   finishRound(false);
 }
 
-function finishRound(timedOut) {
+function finishRound(timedOut, missed = false) {
   clearTimeout(roundTimer);
-  if (timedOut) {
+  if (timedOut || missed) {
     multiplier = 1;
     updateStyleRank();
   }
   currentMoles.forEach(mole => mole.remove());
   currentMoles = [];
 
-  if (round >= TOTAL_ROUNDS) {
+  if (lives <= 0 || round >= TOTAL_ROUNDS) {
     endGame();
   } else {
     state = 'return';
     startBtn.style.display = 'inline-block';
-    messageEl.textContent = timedOut
-      ? "Time's up! Move your mouse back to Start for the next round."
-      : 'Move your mouse back to Start for the next round';
+    messageEl.textContent = missed
+      ? 'Miss! Move your mouse back to Start for the next round.'
+      : timedOut
+        ? "Time's up! Move your mouse back to Start for the next round."
+        : 'Move your mouse back to Start for the next round';
   }
 }
 
@@ -166,6 +170,16 @@ function endGame() {
   startBtn.textContent = 'Play Again';
   messageEl.textContent = 'Game over! Final score: ' + score + ' / ' + round;
 }
+
+// a click outside every mole while targets are visible uses the round's attempt
+document.addEventListener('click', (event) => {
+  if (state !== 'mole-visible') return;
+  if (event.target instanceof Element && event.target.closest('.mole')) return;
+
+  lives--;
+  livesEl.textContent = 'Lives: ' + lives;
+  finishRound(false, true);
+});
 
 // clicking the start button either begins a new game (from idle/ended)
 // or does nothing while a round is already in progress

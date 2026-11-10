@@ -3,27 +3,41 @@ html, body {
   height: 100%;
   margin: 0;
   overflow: hidden; /* moles are positioned absolutely, no scrollbars needed */
-  background: radial-gradient(circle, #8bc34a 0%, #558b2f 100%);
+  background: #fff;
   font-family: sans-serif;
 }
 
-/* heads-up display fixed in the top-left corner */
+/* centered heads-up display with the game stats kept on one row */
 #hud {
   position: fixed;
   top: 10px;
-  left: 10px;
-  font-size: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, calc(100vw - 20px));
+  box-sizing: border-box;
+  font-size: clamp(12px, 2vw, 18px);
   z-index: 10;
   pointer-events: none;
+  text-align: center;
+}
+
+#stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+}
+
+#stats > div {
+  min-width: 0;
+  text-align: center;
 }
 
 #styleRank {
-  margin-top: 4px;
   font-weight: bold;
 }
 
 #message {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 14px;
   color: #444;
   min-height: 18px;
