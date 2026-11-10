@@ -8,7 +8,6 @@ const MAX_SIZE = 100;      // largest mole diameter (px)
 // ---- game state ----
 let score = 0;
 let round = 0;
-let live = 3;                  //set the initial live amount, change if needed
 let currentMole = null;    // reference to the mole element currently on screen
 let delayTimer = null;     // the setTimeout id for the "mole appears" delay
 // state can be: 'idle' | 'waiting' | 'mole-visible' | 'return' | 'ended'
@@ -75,7 +74,6 @@ function showMole() {
 // called when the player clicks the mole: scores a point and removes it
 function whackMole() {
   if (state !== 'mole-visible') return;
-  const hitsound = new Audio('whack.mp3'); hitSound.play();
 
   score++;
   scoreEl.textContent = 'Score: ' + score;
