@@ -159,6 +159,15 @@ function onStartHover() {
   }
 }
 
+function loseLife(){
+  life--;
+  livesEl.textContent = 'Lives: ' + life;
+
+  if (life <= 0)
+  {
+    endGame();
+  }
+}
 // stops the game immediately, clearing any pending mole and timer
 function endGame() {
   state = 'ended';
