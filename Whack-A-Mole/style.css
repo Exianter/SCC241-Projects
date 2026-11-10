@@ -23,7 +23,7 @@ html, body {
 
 #stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
 }
 
@@ -34,6 +34,15 @@ html, body {
 
 #styleRank {
   font-weight: bold;
+}
+
+#lives {
+  font-weight: bold;
+  position: fixed;
+  bottom: 10px;
+  left: 25%;
+  text-align: center;
+
 }
 
 #message {
