@@ -149,67 +149,79 @@ function startNextRound() {
     roundsEl.textContent =
         'Round: ' + round + ' / ' + TOTAL_ROUNDS;
     updateStage();
+    updateArena();
     state = 'waiting';
     startBtn.style.display = 'none';
     messageEl.textContent = '';
+
     const stage = getCurrentStage();
     const difficulty = Math.pow(
         DIFFICULTY_FACTOR,
         stage - 1
     );
 
-    // mole appears faster in later stages
     const minDelay = Math.round(MIN_DELAY * difficulty);
     const maxDelay = Math.round(MAX_DELAY * difficulty);
-
     const delay = randomBetween(
         minDelay,
         Math.max(minDelay, maxDelay)
     );
-
     delayTimer = setTimeout(showMole, delay);
 }
 
-// creates one or two targets for the current round
+// creates one or two targets for the current round and ensure appear inside the arena
 function showMole() {
-  const moleTypes = round <= DUAL_MOLE_ROUNDS
-    ? ['positive', 'negative']
-    : ['positive'];
+    const moleTypes = round <= DUAL_MOLE_ROUNDS
+        ? ['positive', 'negative']
+        : ['positive'];
 
-  currentMoles = moleTypes.map((type, index) => {
-    const size = getMoleSize();
-    const maxX = window.innerWidth - size;
-    const maxY = window.innerHeight - size;
-    const regionWidth = window.innerWidth / moleTypes.length;
-    const minX = moleTypes.length === 2
-      ? Math.min(Math.max(0, maxX), Math.floor(index * regionWidth))
-      : 0;
-    const maxRegionX = moleTypes.length === 2
-      ? Math.min(Math.max(0, maxX), Math.floor((index + 1) * regionWidth - size))
-      : Math.max(0, maxX);
-    const maxPositionX = Math.max(minX, maxRegionX);
-    const x = randomBetween(minX, maxPositionX);
-    const HUD_HEIGHT = 130;
-    const y = randomBetween(HUD_HEIGHT, Math.max(HUD_HEIGHT, maxY));
+    const arenaRect = arena.getBoundingClientRect();
+    currentMoles = moleTypes.map((type, index) => {
+        const size = getMoleSize();
+        const minX = arenaRect.left;
+        const minY = arenaRect.top;
+        const maxX = arenaRect.right - size;
+        const maxY = arenaRect.bottom - size;
+        const regionWidth = arenaRect.width / moleTypes.length;
+        const regionMinX = moleTypes.length === 2
+            ? minX + index * regionWidth
+            : minX;
+        const regionMaxX = moleTypes.length === 2
+            ? minX + (index + 1) * regionWidth - size
+            : maxX;
+        const x = randomBetween(
+            Math.ceil(regionMinX),
+            Math.floor(Math.max(regionMinX, Math.min(maxX, regionMaxX)))
+        );
+        const y = randomBetween(
+            Math.ceil(minY),
+            Math.floor(Math.max(minY, maxY))
+        );
+        const mole = document.createElement('div');
 
-    const mole = document.createElement('div');
-    mole.className = 'mole ' + type;
-    mole.dataset.scoreType = type;
-    mole.setAttribute('aria-label', type + ' score mole');
-    mole.style.width = size + 'px';
-    mole.style.height = size + 'px';
-    mole.style.left = x + 'px';
-    mole.style.top = y + 'px';
-    mole.addEventListener('click', () => whackMole(mole));
-    document.body.appendChild(mole);
-    return mole;
-  });
+        mole.className = 'mole ' + type;
+        mole.dataset.scoreType = type;
 
-  state = 'mole-visible';
-  roundTimer = setTimeout(
-    () => finishRound(true),
-    getRoundTimeLimit()
-  );
+        mole.setAttribute(
+            'aria-label',
+            type + ' score mole'
+        );
+
+        mole.style.width = size + 'px';
+        mole.style.height = size + 'px';
+        mole.style.left = x + 'px';
+        mole.style.top = y + 'px';
+
+        mole.addEventListener('click', () => whackMole(mole));
+        document.body.appendChild(mole);
+        return mole;
+    });
+
+    state = 'mole-visible';
+    roundTimer = setTimeout(
+        () => finishRound(true),
+        getRoundTimeLimit()
+    );
 }
 
 // applies a target's score and finishes the round after one hit
@@ -230,32 +242,36 @@ function whackMole(mole) {
 }
 
 function finishRound(timedOut, missed = false) {
-  clearTimeout(roundTimer);
-  if (timedOut || missed) {
-    multiplier = 1;
-    updateStyleRank();
-  }
-  currentMoles.forEach(mole => mole.remove());
-  currentMoles = [];
+    clearTimeout(roundTimer);
+    if (timedOut || missed) {
+        multiplier = 1;
+        updateStyleRank();
+    }
 
-  if (lives <= 0 || round >= TOTAL_ROUNDS) {
-    endGame();
-  } else {
-    state = 'return';
-    startBtn.style.display = 'inline-block';
-    messageEl.textContent = missed
-      ? 'Miss! Move your mouse back to Start for the next round.'
-      : timedOut
-        ? "Time's up! Move your mouse back to Start for the next round."
-        : 'Move your mouse back to Start for the next round';
-  }
-}
+    currentMoles.forEach(mole => mole.remove());
+    currentMoles = [];
 
-// triggered when the mouse re-enters the start button between rounds
-function onStartHover() {
-  if (state === 'return') {
+    // Game over
+    if (lives <= 0 || round >= TOTAL_ROUNDS) {
+        endGame();
+        return;
+    }
+
+    // End of a stage: show Start button
+    if (round % ROUNDS_PER_STAGE === 0) {
+        state = 'stage-complete';
+        startBtn.style.display = 'inline-block';
+        startBtn.textContent = 'Start Stage ' + (getCurrentStage() + 1);
+        messageEl.textContent =
+            'Stage ' + getCurrentStage() +
+            ' completed! Click Start to enter Stage ' +
+            (getCurrentStage() + 1) + '.';
+        return;
+    }
+
+    // Continue automatically within the same stage
+    messageEl.textContent = '';
     startNextRound();
-  }
 }
 
 function loseLife(){
@@ -292,13 +308,13 @@ document.addEventListener('click', (event) => {
 // clicking the start button either begins a new game (from idle/ended)
 // or does nothing while a round is already in progress
 startBtn.addEventListener('click', () => {
-  if (state === 'idle' || state === 'ended') {
-    startGame();
-  }
+    if (state === 'idle' || state === 'ended') {
+        startGame();
+    }
+    else if (state === 'stage-complete') {
+        startNextRound();
+    }
 });
-
-// moving the mouse back onto the start button starts the next round
-startBtn.addEventListener('mouseenter', onStartHover);
 
 // pressing ESC ends the game early, from any state
 document.addEventListener('keydown', (e) => {
