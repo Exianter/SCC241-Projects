@@ -33,6 +33,8 @@ let currentMoles = [];
 let delayTimer = null;     
 let roundTimer = null;
 let state = 'idle';
+let countdownTimer = null;
+let transitionTimeout = null;
 
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
@@ -43,6 +45,10 @@ const messageEl = document.getElementById('message');
 const stageEl = document.getElementById('stage');
 const arena = document.getElementById('arena');
 const arenaLabel = document.getElementById('arenaLabel');
+const stageTransition = document.getElementById('stageTransition');
+const transitionTitle = document.getElementById('transitionTitle');
+const transitionMessage = document.getElementById('transitionMessage');
+const countdownEl = document.getElementById('countdown');
 
 function playHitSound() {
   const hitSound = new Audio('hit.mp3');
@@ -51,11 +57,6 @@ function playHitSound() {
     console.log('Sound playback failed:', error);
   });
 }
-
-// global click listener
-document.addEventListener('click', () => {
-  playHitSound();
-});
 
 function updateStyleRank() {
   styleRankEl.textContent = 'Style: ' + STYLE_RANKS[multiplier - 1] + ' (' + multiplier + 'x)';
@@ -107,9 +108,8 @@ function updateStage() {
 }
 
 // updates arena display
-function updateArena() {
-    const stage = getCurrentStage();
-
+function updateArena(stage = getCurrentStage()) {
+  
     // Arena gets smaller every stage
     const scale = Math.max(
         0.4,
@@ -147,6 +147,45 @@ function hexToRGBA(hex, opacity) {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
+function startStageTransition(stage) {
+    clearInterval(countdownTimer);
+    clearTimeout(transitionTimeout);
+    state = 'transition';
+    startBtn.style.display = 'none';
+    updateArena(stage);
+    const stageColors = [
+        '#32834a',
+        '#91a832',
+        '#d5a126',
+        '#e67e22',
+        '#d64b36',
+        '#a51f35'
+    ];
+
+    transitionTitle.textContent = 'STAGE ' + stage;
+    transitionTitle.style.color = stageColors[stage - 1];
+    transitionMessage.textContent = 'GET READY!';
+    stageTransition.style.display = 'flex';
+    let countdown = 3;
+    countdownEl.textContent = countdown;
+    countdownTimer = setInterval(() => {
+        countdown--;
+        
+        if (countdown > 0) {
+            countdownEl.textContent = countdown;
+        } else {
+            clearInterval(countdownTimer);
+            countdownEl.textContent = 'GO!';
+            setTimeout(() => {
+              if (state !== 'transition') return;
+              
+              stageTransition.style.display = 'none';
+              startNextRound();
+            }, 700);
+        }
+    }, 1000);
+}
+
 // resets score/round counters and kicks off round 1
 function startGame() {
     score = 0;
@@ -161,7 +200,7 @@ function startGame() {
     messageEl.textContent = '';
     startBtn.textContent = 'Start';
     startBtn.style.display = 'inline-block';
-    startNextRound();
+    startStageTransition(1);
 }
 
 // begins one round: hides the start button and waits a random delay
@@ -191,36 +230,43 @@ function startNextRound() {
     delayTimer = setTimeout(showMole, delay);
 }
 
-// creates one or two targets for the current round and ensure appear inside the arena
+// creates both green and red moles in every round
+// and ensures they appear inside the arena
+// Creates green and red moles at random, non-overlapping positions
 function showMole() {
-    const moleTypes = round <= DUAL_MOLE_ROUNDS
-        ? ['positive', 'negative']
-        : ['positive'];
-
+    const moleTypes = ['positive', 'negative'];
     const arenaRect = arena.getBoundingClientRect();
-    currentMoles = moleTypes.map((type, index) => {
-        const size = getMoleSize();
-        const minX = arenaRect.left;
-        const minY = arenaRect.top;
-        const maxX = arenaRect.right - size;
-        const maxY = arenaRect.bottom - size;
-        const regionWidth = arenaRect.width / moleTypes.length;
-        const regionMinX = moleTypes.length === 2
-            ? minX + index * regionWidth
-            : minX;
-        const regionMaxX = moleTypes.length === 2
-            ? minX + (index + 1) * regionWidth - size
-            : maxX;
-        const x = randomBetween(
-            Math.ceil(regionMinX),
-            Math.floor(Math.max(regionMinX, Math.min(maxX, regionMaxX)))
-        );
-        const y = randomBetween(
-            Math.ceil(minY),
-            Math.floor(Math.max(minY, maxY))
-        );
-        const mole = document.createElement('div');
+    const size = getMoleSize();
+    currentMoles = [];
 
+    moleTypes.forEach((type) => {
+        let x;
+        let y;
+        let attempts = 0;
+        let overlapping;
+
+        // keep generating positions until the mole does not overlap
+        do {
+            x = randomBetween(
+                Math.ceil(arenaRect.left),
+                Math.floor(arenaRect.right - size)
+            );
+
+            y = randomBetween(
+                Math.ceil(arenaRect.top),
+                Math.floor(arenaRect.bottom - size)
+            );
+
+            overlapping = currentMoles.some((existingMole) => {
+                const existingX = parseFloat(existingMole.style.left);
+                const existingY = parseFloat(existingMole.style.top);
+                const distanceX = Math.abs(x - existingX);
+                const distanceY = Math.abs(y - existingY);
+                return distanceX < size && distanceY < size;
+            });
+            attempts++;
+        } while (overlapping && attempts < 100);
+        const mole = document.createElement('div');
         mole.className = 'mole ' + type;
         mole.dataset.scoreType = type;
 
@@ -233,10 +279,9 @@ function showMole() {
         mole.style.height = size + 'px';
         mole.style.left = x + 'px';
         mole.style.top = y + 'px';
-
         mole.addEventListener('click', () => whackMole(mole));
         document.body.appendChild(mole);
-        return mole;
+        currentMoles.push(mole);
     });
 
     state = 'mole-visible';
@@ -248,19 +293,20 @@ function showMole() {
 
 // applies a target's score and finishes the round after one hit
 function whackMole(mole) {
-  if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
+    if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
+    playHitSound();
 
-  if (mole.dataset.scoreType === 'positive') {
-    score += multiplier;
-    multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
-  } else {
-    score -= 1;
-    multiplier = Math.max(1, multiplier - 1);
-  }
-  scoreEl.textContent = 'Score: ' + score;
-  updateStyleRank();
+    if (mole.dataset.scoreType === 'positive') {
+        score += multiplier;
+        multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
+    } else {
+        score -= 1;
+        multiplier = Math.max(1, multiplier - 1);
+    }
 
-  finishRound(false);
+    scoreEl.textContent = 'Score: ' + score;
+    updateStyleRank();
+    finishRound(false);
 }
 
 function finishRound(timedOut, missed = false) {
@@ -281,15 +327,15 @@ function finishRound(timedOut, missed = false) {
 
     // End of a stage: show Start button
     if (round % ROUNDS_PER_STAGE === 0) {
-        state = 'stage-complete';
-        startBtn.style.display = 'inline-block';
-        startBtn.textContent = 'Start Stage ' + (getCurrentStage() + 1);
-        messageEl.textContent =
-            'Stage ' + getCurrentStage() +
-            ' completed! Click Start to enter Stage ' +
-            (getCurrentStage() + 1) + '.';
-        return;
-    }
+    state = 'stage-complete';
+    startBtn.style.display = 'inline-block';
+    startBtn.textContent = 'Start Stage ' + (getCurrentStage() + 1);
+    messageEl.textContent =
+        'Stage ' + getCurrentStage() +
+        ' completed! Click Start to enter Stage ' +
+        (getCurrentStage() + 1) + '.';
+    return;
+}
 
     // Continue automatically within the same stage
     messageEl.textContent = '';
@@ -305,6 +351,7 @@ function loseLife(){
     endGame();
   }
 }
+
 // stops the game immediately, clearing any pending mole and timer
 function endGame() {
   state = 'ended';
@@ -315,6 +362,9 @@ function endGame() {
   startBtn.style.display = 'inline-block';
   startBtn.textContent = 'Play Again';
   messageEl.textContent = 'Game over! Final score: ' + score + ' / ' + round;
+  clearInterval(countdownTimer);
+  clearTimeout(transitionTimeout);
+  stageTransition.style.display = 'none';
 }
 
 // a click outside every mole while targets are visible uses the round's attempt
@@ -334,7 +384,8 @@ startBtn.addEventListener('click', () => {
         startGame();
     }
     else if (state === 'stage-complete') {
-        startNextRound();
+        const nextStage = getCurrentStage() + 1;
+        startStageTransition(nextStage);
     }
 });
 
