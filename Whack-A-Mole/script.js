@@ -43,6 +43,13 @@ let pointerX = null;
 let pointerY = null;
 let pointerInCenter = false;
 let centerZoneStageColor = '#32834a';
+// ---- round database ----
+let roundData = [];
+let roundStartTime = null;
+let roundReactionTime = '';
+let roundOutcome = '';
+let roundScoreBefore = 0;
+let roundRecorded = false;
 
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
@@ -59,6 +66,7 @@ const transitionMessage = document.getElementById('transitionMessage');
 const countdownEl = document.getElementById('countdown');
 const timerProgress = document.getElementById('roundTimerProgress');
 const timerBar = document.getElementById('roundTimer');
+const exportCsvBtn = document.getElementById('exportCsvBtn');
 const hitSound = new Audio('hit.mp3');
 hitSound.preload = 'auto';
 hitSound.load();
@@ -176,14 +184,20 @@ function startDelayTimer() {
 
 function startRoundTimer() {
     if (roundTimer !== null) return;
-
     timerProgress.style.transition = 'none';
     timerProgress.style.width = '100%';
     timerProgress.offsetWidth;
     timerProgress.style.transition =
         `width ${roundTimeTotal}ms linear`;
     timerProgress.style.width = '0%';
-    roundTimer = setTimeout(() => finishRound(true), roundTimeTotal);
+
+    roundStartTime = performance.now();
+    roundTimer = setTimeout(() => {
+        roundTimer = null;
+        roundOutcome = 'timeout';
+        roundReactionTime = '';
+        finishRound(true);
+    }, roundTimeTotal);
 }
 
 function pauseSpawnDelay() {
@@ -285,6 +299,17 @@ function startGame() {
     startBtn.textContent = 'Start';
     startBtn.style.display = 'inline-block';
     startStageTransition(1);
+
+    // reset round database
+    roundData = [];
+
+    roundStartTime = null;
+    roundReactionTime = '';
+    roundOutcome = '';
+    roundScoreBefore = 0;
+    roundRecorded = false;
+
+    exportCsvBtn.style.display = 'none';
 }
 
 // begins one round: hides the start button and waits a random delay
@@ -299,6 +324,14 @@ function startNextRound() {
     }
 
     round++;
+
+    // fresh record for this round
+    roundStartTime = null;
+    roundReactionTime = '';
+    roundOutcome = '';
+    roundScoreBefore = score;
+    roundRecorded = false;
+
     roundsEl.textContent =
         'Round: ' + round + ' / ' + TOTAL_ROUNDS;
     updateArena();
@@ -379,8 +412,9 @@ function showMole() {
     });
     state = 'mole-visible';
 
-    // start the timer progress bar
+    // Set the round time limit
     roundTimeTotal = getRoundTimeLimit();
+
     timerBar.style.display = 'block';
     startRoundTimer();
 }
@@ -406,6 +440,16 @@ function whackMole(mole) {
     }
 
     state = 'resolving';
+
+    // calculate reaction time
+    roundReactionTime = Math.round(
+        performance.now() - roundStartTime
+    );
+
+    // record which mole was hit
+    roundOutcome = mole.dataset.scoreType === 'positive'
+        ? 'green_hit'
+        : 'red_hit';
 
     clearTimeout(roundTimer);
     roundTimer = null;
@@ -443,8 +487,15 @@ function whackMole(mole) {
     scoreEl.textContent = 'Score: ' + score;
     updateStyleRank();
     mole.classList.add('hit');
-    mole.addEventListener('animationend', () => mole.remove(), { once: true });
-    finishRound(false);
+    resolveTimer = setTimeout(() => {
+        finishRound(false);
+    }, 200);
+
+    mole.addEventListener(
+        'animationend',
+        () => mole.remove(),
+        { once: true }
+    );
 }
 
 function finishRound(timedOut, missed = false) {
@@ -452,6 +503,9 @@ function finishRound(timedOut, missed = false) {
     roundTimer = null;
     clearTimeout(resolveTimer);
     resolveTimer = null;
+
+    // save this round's results
+    recordRound();
 
     timerBar.style.display = 'none';
     timerProgress.style.transition = 'none';
@@ -485,40 +539,118 @@ function finishRound(timedOut, missed = false) {
     return;
 }
 
-    // Continue automatically within the same stage
+    // continue automatically within the same stage
     messageEl.textContent = '';
     startNextRound();
 }
 
-function loseLife(){
-  life--;
-  livesEl.textContent = 'Lives: ' + life;
+function recordRound() {
+    // prevent duplicate records
+    if (roundRecorded || round <= 0) return;
 
-  if (life <= 0)
-  {
-    endGame();
-  }
+    const scoreChange = score - roundScoreBefore;
+
+    roundData.push({
+        round: round,
+        stage: getCurrentStage(),
+        reaction_time_ms: roundReactionTime,
+        outcome: roundOutcome,
+        score_change: scoreChange,
+        total_score: score
+    });
+
+    roundRecorded = true;
+}
+
+function loseLife() {
+    lives--;
+    livesEl.textContent = 'Lives: ' + lives;
+
+    if (lives <= 0) {
+        endGame();
+    }
 }
 
 // stops the game immediately, clearing any pending mole and timer
 function endGame() {
-  state = 'ended';
-  clearTimeout(delayTimer);
-  delayTimer = null;
-  clearTimeout(roundTimer);
-  roundTimer = null;
-  currentMoles.forEach(mole => mole.remove());
-  currentMoles = [];
-  setCenterZoneVisible(false);
-  startBtn.style.display = 'inline-block';
-  startBtn.textContent = 'Play Again';
-  messageEl.textContent = 'Game over! Final score: ' + score;
-  clearInterval(countdownTimer);
-  clearTimeout(transitionTimeout);
-  stageTransition.style.display = 'none';
-  clearTimeout(resolveTimer);
-  timerBar.style.display = 'none';
-  arena.classList.remove('miss');
+    // Save an unfinished round if the player exits early
+    if (round > 0 && !roundRecorded) {
+        roundOutcome = 'aborted';
+
+        if (roundStartTime !== null && state === 'mole-visible') {
+            roundReactionTime = Math.round(
+                performance.now() - roundStartTime
+            );
+        }
+
+        recordRound();
+    }
+
+    // Show CSV download button
+    exportCsvBtn.style.display = 'block';
+
+    state = 'ended';
+    clearTimeout(delayTimer);
+    delayTimer = null;
+    clearTimeout(roundTimer);
+    roundTimer = null;
+    currentMoles.forEach(mole => mole.remove());
+    currentMoles = [];
+    setCenterZoneVisible(false);
+    startBtn.style.display = 'inline-block';
+    startBtn.textContent = 'Play Again';
+    messageEl.textContent = 'Game over! Final score: ' + score;
+    clearInterval(countdownTimer);
+    clearTimeout(transitionTimeout);
+    stageTransition.style.display = 'none';
+    clearTimeout(resolveTimer);
+    timerBar.style.display = 'none';
+    arena.classList.remove('miss');
+}
+
+function exportRoundData() {
+    const headers = [
+        'Round',
+        'Stage',
+        'Reaction Time (ms)',
+        'Outcome',
+        'Score Change',
+        'Total Score'
+    ];
+
+    const rows = roundData.map(entry => [
+        entry.round,
+        entry.stage,
+        entry.reaction_time_ms,
+        entry.outcome,
+        entry.score_change,
+        entry.total_score
+    ]);
+
+    const csvContent = [
+        headers,
+        ...rows
+    ].map(row =>
+        row.map(value => {
+            const text = String(value ?? '');
+            return '"' + text.replace(/"/g, '""') + '"';
+        }).join(',')
+    ).join('\r\n');
+
+    const blob = new Blob(
+        ['\uFEFF' + csvContent],
+        { type: 'text/csv;charset=utf-8;' }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = 'whack_a_mole_round_data.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 document.addEventListener('pointermove', (event) => {
@@ -552,7 +684,16 @@ document.addEventListener('click', (event) => {
         return;
     }
     state = 'resolving';
+
     clearTimeout(roundTimer);
+    roundTimer = null;
+
+    // record missed click reaction time
+    roundReactionTime = Math.round(
+        performance.now() - roundStartTime
+    );
+    roundOutcome = 'miss';
+
     lives--;
     livesEl.textContent = 'Lives: ' + lives;
 
@@ -599,3 +740,5 @@ document.addEventListener('keydown', (e) => {
     endGame();
   }
 });
+
+exportCsvBtn.addEventListener('click', exportRoundData);

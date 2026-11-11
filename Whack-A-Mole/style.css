@@ -315,3 +315,24 @@ html, body {
         transform: translate(-50%, -55px) scale(0.8);
     }
 }
+
+/* CSV download button */
+#exportCsvBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 22px;
+    border: none;
+    border-radius: 8px;
+    background: #32834a;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 15;
+}
+
+#exportCsvBtn:hover {
+    background: #246638;
+}
