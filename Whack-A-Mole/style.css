@@ -232,3 +232,43 @@ html, body {
         transform: translate(calc(-50% + 5px), -50%);
     }
 }
+
+.score-popup {
+    position: fixed;
+    z-index: 20;
+    pointer-events: none;
+    font-size: 32px;
+    font-weight: 900;
+    animation: scorePop 0.45s ease-out forwards;
+}
+
+.score-popup.positive {
+    color: #32834a;
+}
+
+.score-popup.negative,
+.score-popup.missed {
+    color: #d32f2f;
+}
+
+@keyframes scorePop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 10px) scale(0.3);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -8px) scale(1.4);
+    }
+
+    55% {
+        opacity: 1;
+        transform: translate(-50%, -20px) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -55px) scale(0.8);
+    }
+}

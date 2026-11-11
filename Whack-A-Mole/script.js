@@ -299,6 +299,20 @@ function showMole() {
     roundTimer = setTimeout(() => finishRound(true), timeLimit);
 }
 
+function showScorePopup(text, x, y, type) {
+    const popup = document.createElement('div');
+
+    popup.className = 'score-popup ' + type;
+    popup.textContent = text;
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+    document.body.appendChild(popup);
+
+    popup.addEventListener('animationend', () => {
+        popup.remove();
+    });
+}
+
 // applies a target's score and finishes the round after one hit
 function whackMole(mole) {
     if (state !== 'mole-visible' || !currentMoles.includes(mole)) {
@@ -310,18 +324,33 @@ function whackMole(mole) {
     clearTimeout(roundTimer);
     playHitSound();
 
+    const rect = mole.getBoundingClientRect();
+
     if (mole.dataset.scoreType === 'positive') {
-        score += multiplier;
+        const pointsEarned = multiplier;
+
+        score += pointsEarned;
+        showScorePopup(
+            '+' + pointsEarned,
+            rect.left + rect.width / 2,
+            rect.top,
+            'positive'
+        );
         multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
+
     } else {
         score -= 1;
+        showScorePopup(
+            '-1',
+            rect.left + rect.width / 2,
+            rect.top,
+            'negative'
+        );
         multiplier = Math.max(1, multiplier - 1);
     }
 
     scoreEl.textContent = 'Score: ' + score;
     updateStyleRank();
-
-    // play hit animation
     mole.classList.add('hit');
 
     resolveTimer = setTimeout(() => {
@@ -406,13 +435,21 @@ document.addEventListener('click', (event) => {
     ) {
         return;
     }
-
     state = 'resolving';
     clearTimeout(roundTimer);
     lives--;
     livesEl.textContent = 'Lives: ' + lives;
 
-    // play arena shake animation
+    // Show MISS animation near the center of the arena
+    const arenaRect = arena.getBoundingClientRect();
+
+    showScorePopup(
+        'MISS!',
+        arenaRect.left + arenaRect.width / 2,
+        arenaRect.top + arenaRect.height / 2,
+        'missed'
+    );
+
     arena.classList.remove('miss');
     arena.offsetWidth;
     arena.classList.add('miss');
