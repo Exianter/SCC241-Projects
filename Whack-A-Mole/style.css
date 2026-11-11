@@ -7,7 +7,7 @@ html, body {
   font-family: sans-serif;
 }
 
-/* centered heads-up display with the game stats kept on one row */
+/* centered HUD row with score, style, and lives around the center */
 #hud {
   position: fixed;
   top: 10px;
@@ -15,36 +15,60 @@ html, body {
   transform: translateX(-50%);
   width: min(900px, calc(100vw - 20px));
   box-sizing: border-box;
-  font-size: clamp(12px, 2vw, 18px);
+  font-size: clamp(10px, 2vw, 18px);
   z-index: 10;
   pointer-events: none;
-  text-align: center;
 }
 
 #stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: center;
-    gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+  align-items: center;
+  width: min(720px, 100%);
+  margin: 0 auto;
 }
 
-#stats > div {
-  min-width: 0;
-  text-align: center;
+#score,
+#lives {
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 #styleRank {
   font-weight: bold;
+  white-space: nowrap;
+  text-align: center;
+}
+
+#score {
+  text-align: right;
 }
 
 #lives {
-  font-weight: bold;
-  position: fixed;
-  bottom: 15px;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  #stats {
+    font-size: clamp(8px, 2.8vw, 12px);
+  }
+}
+
+#message,
+#roundTimer {
+  width: min(900px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#rounds {
+  position: absolute;
+  top: -30px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  z-index: 10;
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 #message {
@@ -52,19 +76,20 @@ html, body {
   font-size: 14px;
   color: #444;
   min-height: 18px;
+  text-align: center;
 }
 
-/* the start button sits in a fixed spot; the player returns the mouse here
-   between rounds to trigger the next one */
+/* the start button shares the arena's center checkpoint */
 #startBtn {
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 18px;
   padding: 14px 28px;
   cursor: pointer;
-  z-index: 5;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 /* a mole: a circle placed at a random spot with a random size by game.js */
@@ -91,7 +116,7 @@ html, body {
     top: 55%;
     transform: translate(-50%, -50%);
     width: 90vw;
-    height: 65vh;
+    height: 80vh;
     box-sizing: border-box;
     background: rgba(50, 131, 74, 0.08);
     border: 3px dashed #32834a;
@@ -101,6 +126,7 @@ html, body {
     transition:
         width 0.5s ease,
         height 0.5s ease,
+        top 0.5s ease,
         background-color 0.5s ease,
         border-color 0.5s ease;
 }
@@ -115,6 +141,23 @@ html, body {
     font-weight: bold;
     white-space: nowrap;
     transition: color 0.5s ease;
+}
+
+#centerZone {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    border: 2px solid #32834a;
+    border-radius: 50%;
+    background: rgba(50, 131, 74, 0.15);
+    transition:
+        border-color 0.5s ease,
+        background-color 0.5s ease,
+        opacity 0.15s ease;
 }
 
 /* stage transition overlay */
