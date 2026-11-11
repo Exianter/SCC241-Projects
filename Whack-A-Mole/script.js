@@ -474,7 +474,7 @@ function whackMole(mole) {
         multiplier = Math.min(multiplier + 1, STYLE_RANKS.length);
 
     } else {
-        score -= 1;
+        score = Math.max(0, score - 1);
         showScorePopup(
             '-1',
             rect.left + rect.width / 2,

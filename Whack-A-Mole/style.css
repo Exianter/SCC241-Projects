@@ -210,6 +210,7 @@ html, body {
 
 /* round timer progress bar */
 #roundTimer {
+    display: none;
     width: 100%;
     height: 8px;
     margin-top: 10px;
