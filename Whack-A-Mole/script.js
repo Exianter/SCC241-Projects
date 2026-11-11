@@ -13,7 +13,6 @@ const DIFFICULTY_FACTOR = 0.85;
 // Mole size relative to the screen
 const BASE_SIZE_RATIO = 0.14;
 const MIN_MOLE_SIZE = 24;
-const DUAL_MOLE_ROUNDS = 10;
 const STYLE_RANKS = [
     'Dismal',
     'Crazy',
@@ -35,6 +34,7 @@ let roundTimer = null;
 let state = 'idle';
 let countdownTimer = null;
 let transitionTimeout = null;
+let resolveTimer = null;
 
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
@@ -49,6 +49,8 @@ const stageTransition = document.getElementById('stageTransition');
 const transitionTitle = document.getElementById('transitionTitle');
 const transitionMessage = document.getElementById('transitionMessage');
 const countdownEl = document.getElementById('countdown');
+const timerProgress = document.getElementById('roundTimerProgress');
+const timerBar = document.getElementById('roundTimer');
 
 function playHitSound() {
   const hitSound = new Audio('hit.mp3');
@@ -176,7 +178,7 @@ function startStageTransition(stage) {
         } else {
             clearInterval(countdownTimer);
             countdownEl.textContent = 'GO!';
-            setTimeout(() => {
+            transitionTimeout = setTimeout(() => {
               if (state !== 'transition') return;
               
               stageTransition.style.display = 'none';
@@ -232,11 +234,12 @@ function startNextRound() {
 
 // creates both green and red moles in every round
 // and ensures they appear inside the arena
-// Creates green and red moles at random, non-overlapping positions
+// creates green and red moles at random, non-overlapping positions
 function showMole() {
     const moleTypes = ['positive', 'negative'];
     const arenaRect = arena.getBoundingClientRect();
     const size = getMoleSize();
+
     currentMoles = [];
 
     moleTypes.forEach((type) => {
@@ -245,7 +248,6 @@ function showMole() {
         let attempts = 0;
         let overlapping;
 
-        // keep generating positions until the mole does not overlap
         do {
             x = randomBetween(
                 Math.ceil(arenaRect.left),
@@ -260,21 +262,20 @@ function showMole() {
             overlapping = currentMoles.some((existingMole) => {
                 const existingX = parseFloat(existingMole.style.left);
                 const existingY = parseFloat(existingMole.style.top);
-                const distanceX = Math.abs(x - existingX);
-                const distanceY = Math.abs(y - existingY);
-                return distanceX < size && distanceY < size;
+
+                return (
+                    Math.abs(x - existingX) < size &&
+                    Math.abs(y - existingY) < size
+                );
             });
+
             attempts++;
         } while (overlapping && attempts < 100);
+
         const mole = document.createElement('div');
         mole.className = 'mole ' + type;
         mole.dataset.scoreType = type;
-
-        mole.setAttribute(
-            'aria-label',
-            type + ' score mole'
-        );
-
+        mole.setAttribute('aria-label', type + ' score mole');
         mole.style.width = size + 'px';
         mole.style.height = size + 'px';
         mole.style.left = x + 'px';
@@ -283,17 +284,30 @@ function showMole() {
         document.body.appendChild(mole);
         currentMoles.push(mole);
     });
-
     state = 'mole-visible';
-    roundTimer = setTimeout(
-        () => finishRound(true),
-        getRoundTimeLimit()
-    );
+
+    // start the timer progress bar
+    const timeLimit = getRoundTimeLimit();
+    timerBar.style.display = 'block';
+    timerProgress.style.transition = 'none';
+    timerProgress.style.width = '100%';
+
+    // force browser to apply the reset before starting animation
+    timerProgress.offsetWidth;
+    timerProgress.style.transition = `width ${timeLimit}ms linear`;
+    timerProgress.style.width = '0%';
+    roundTimer = setTimeout(() => finishRound(true), timeLimit);
 }
 
 // applies a target's score and finishes the round after one hit
 function whackMole(mole) {
-    if (state !== 'mole-visible' || !currentMoles.includes(mole)) return;
+    if (state !== 'mole-visible' || !currentMoles.includes(mole)) {
+        return;
+    }
+
+    state = 'resolving';
+
+    clearTimeout(roundTimer);
     playHitSound();
 
     if (mole.dataset.scoreType === 'positive') {
@@ -306,11 +320,23 @@ function whackMole(mole) {
 
     scoreEl.textContent = 'Score: ' + score;
     updateStyleRank();
-    finishRound(false);
+
+    // play hit animation
+    mole.classList.add('hit');
+
+    resolveTimer = setTimeout(() => {
+        finishRound(false);
+    }, 200);
 }
 
 function finishRound(timedOut, missed = false) {
     clearTimeout(roundTimer);
+    clearTimeout(resolveTimer);
+
+    timerBar.style.display = 'none';
+    timerProgress.style.transition = 'none';
+    timerProgress.style.width = '100%';
+
     if (timedOut || missed) {
         multiplier = 1;
         updateStyleRank();
@@ -365,16 +391,36 @@ function endGame() {
   clearInterval(countdownTimer);
   clearTimeout(transitionTimeout);
   stageTransition.style.display = 'none';
+  clearTimeout(resolveTimer);
+  timerBar.style.display = 'none';
+  arena.classList.remove('miss');
 }
 
 // a click outside every mole while targets are visible uses the round's attempt
 document.addEventListener('click', (event) => {
-  if (state !== 'mole-visible') return;
-  if (event.target instanceof Element && event.target.closest('.mole')) return;
+    if (state !== 'mole-visible') return;
 
-  lives--;
-  livesEl.textContent = 'Lives: ' + lives;
-  finishRound(false, true);
+    if (
+        event.target instanceof Element &&
+        event.target.closest('.mole')
+    ) {
+        return;
+    }
+
+    state = 'resolving';
+    clearTimeout(roundTimer);
+    lives--;
+    livesEl.textContent = 'Lives: ' + lives;
+
+    // play arena shake animation
+    arena.classList.remove('miss');
+    arena.offsetWidth;
+    arena.classList.add('miss');
+
+    resolveTimer = setTimeout(() => {
+        arena.classList.remove('miss');
+        finishRound(false, true);
+    }, 250);
 });
 
 // clicking the start button either begins a new game (from idle/ended)

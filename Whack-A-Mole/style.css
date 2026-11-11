@@ -40,10 +40,11 @@ html, body {
 #lives {
   font-weight: bold;
   position: fixed;
-  bottom: 10px;
-  left: 25%;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
-
+  z-index: 10;
 }
 
 #message {
@@ -161,5 +162,73 @@ html, body {
     to {
         opacity: 1;
         transform: scale(1);
+    }
+}
+
+/* round timer progress bar */
+#roundTimer {
+    width: 100%;
+    height: 8px;
+    margin-top: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#roundTimerProgress {
+    width: 100%;
+    height: 100%;
+    background: #32834a;
+    border-radius: 10px;
+    transition: width linear;
+}
+
+/* Hit animation */
+.mole.hit {
+    animation: moleHit 0.2s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes moleHit {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.35);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* arena shake when the player misses */
+#arena.miss {
+    animation: arenaMiss 0.25s ease;
+}
+
+@keyframes arenaMiss {
+    0%, 100% {
+        transform: translate(-50%, -50%);
+    }
+
+    20% {
+        transform: translate(calc(-50% - 8px), -50%);
+    }
+
+    40% {
+        transform: translate(calc(-50% + 8px), -50%);
+    }
+
+    60% {
+        transform: translate(calc(-50% - 5px), -50%);
+    }
+
+    80% {
+        transform: translate(calc(-50% + 5px), -50%);
     }
 }
