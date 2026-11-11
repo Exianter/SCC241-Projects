@@ -42,6 +42,7 @@ let roundTimeTotal = 0;
 let pointerX = null;
 let pointerY = null;
 let pointerInCenter = false;
+let centerZoneStageColor = '#32834a';
 
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
@@ -61,6 +62,12 @@ const timerBar = document.getElementById('roundTimer');
 
 function setCenterZoneVisible(visible) {
     centerZone.style.opacity = visible ? '1' : '0';
+}
+
+function updateCenterZoneColor() {
+    const color = pointerInCenter ? centerZoneStageColor : '#d32f2f';
+    centerZone.style.borderColor = color;
+    centerZone.style.backgroundColor = hexToRGBA(color, 0.15);
 }
 
 function playHitSound() {
@@ -141,8 +148,9 @@ function updateArena(stage = getCurrentStage()) {
     arenaLabel.style.color = color;
     arenaLabel.textContent =
         'STAGE ' + stage + ' ARENA';
-    centerZone.style.borderColor = color;
-    centerZone.style.backgroundColor = hexToRGBA(color, 0.15);
+    centerZoneStageColor = color;
+    pointerInCenter = pointerIsInCenterZone();
+    updateCenterZoneColor();
 }
 
 // convert HEX color to RGBA
@@ -199,6 +207,7 @@ function pointerIsInCenterZone() {
 function updateCenterGate() {
     const wasInCenter = pointerInCenter;
     pointerInCenter = pointerIsInCenterZone();
+    updateCenterZoneColor();
 
     if (!pointerInCenter) {
         pauseSpawnDelay();
