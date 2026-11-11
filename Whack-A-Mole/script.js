@@ -59,6 +59,9 @@ const transitionMessage = document.getElementById('transitionMessage');
 const countdownEl = document.getElementById('countdown');
 const timerProgress = document.getElementById('roundTimerProgress');
 const timerBar = document.getElementById('roundTimer');
+const hitSound = new Audio('hit.mp3');
+hitSound.preload = 'auto';
+hitSound.load();
 
 function setCenterZoneVisible(visible) {
     centerZone.style.opacity = visible ? '1' : '0';
@@ -71,7 +74,6 @@ function updateCenterZoneColor() {
 }
 
 function playHitSound() {
-  const hitSound = new Audio('hit.mp3');
   hitSound.currentTime = 0;
   hitSound.play().catch(error => {
     console.log('Sound playback failed:', error);
