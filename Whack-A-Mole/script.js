@@ -30,9 +30,8 @@ let round = 0;
 let lives = STARTING_LIVES;
 let multiplier = 1;
 let currentMoles = [];
-let delayTimer = null;     // the setTimeout id for the "mole appears" delay
+let delayTimer = null;     
 let roundTimer = null;
-// state can be: 'idle' | 'waiting' | 'mole-visible' | 'return' | 'ended'
 let state = 'idle';
 
 const startBtn = document.getElementById('startBtn');
@@ -42,6 +41,8 @@ const roundsEl = document.getElementById('rounds');
 const livesEl = document.getElementById('lives');
 const messageEl = document.getElementById('message');
 const stageEl = document.getElementById('stage');
+const arena = document.getElementById('arena');
+const arenaLabel = document.getElementById('arenaLabel');
 
 function playHitSound() {
   const hitSound = new Audio('hit.mp3');
@@ -103,6 +104,26 @@ function updateStage() {
     const stage = getCurrentStage();
     stageEl.textContent =
         'Stage: ' + stage + ' / ' + TOTAL_STAGES;
+}
+
+// updates arena display
+function updateArena() {
+
+    const stage = getCurrentStage();
+
+    // Stage 1 = 100%, Stage 6 = 40%
+    const scale = Math.max(
+        0.4,
+        1 - (stage - 1) * 0.12
+    );
+
+    const width = window.innerWidth * 0.9 * scale;
+    const height = window.innerHeight * 0.65 * scale;
+
+    arena.style.width = width + 'px';
+    arena.style.height = height + 'px';
+
+    arenaLabel.textContent = 'STAGE ' + stage + ' ARENA';
 }
 
 // resets score/round counters and kicks off round 1

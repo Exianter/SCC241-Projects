@@ -82,3 +82,37 @@ html, body {
 .mole.negative {
   background: #b63838;
 }
+
+/* mole spawn arena */
+#arena {
+    position: fixed;
+    left: 50%;
+    top: 55%;
+    transform: translate(-50%, -50%);
+
+    width: 90vw;
+    height: 65vh;
+
+    box-sizing: border-box;
+
+    background: rgba(50, 131, 74, 0.08);
+    border: 3px dashed rgba(50, 131, 74, 0.55);
+    border-radius: 16px;
+
+    z-index: 1;
+    pointer-events: none;
+
+    transition: width 0.5s ease, height 0.5s ease;
+}
+
+#arenaLabel {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    color: #32834a;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
