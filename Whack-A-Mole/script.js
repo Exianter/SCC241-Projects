@@ -108,10 +108,9 @@ function updateStage() {
 
 // updates arena display
 function updateArena() {
-
     const stage = getCurrentStage();
 
-    // Stage 1 = 100%, Stage 6 = 40%
+    // Arena gets smaller every stage
     const scale = Math.max(
         0.4,
         1 - (stage - 1) * 0.12
@@ -119,27 +118,50 @@ function updateArena() {
 
     const width = window.innerWidth * 0.9 * scale;
     const height = window.innerHeight * 0.65 * scale;
-
     arena.style.width = width + 'px';
     arena.style.height = height + 'px';
 
-    arenaLabel.textContent = 'STAGE ' + stage + ' ARENA';
+    // Stage colors
+    const stageColors = [
+        '#32834a', // Stage 1 - Green
+        '#91a832', // Stage 2 - Yellow-green
+        '#d5a126', // Stage 3 - Yellow
+        '#e67e22', // Stage 4 - Orange
+        '#d64b36', // Stage 5 - Red-orange
+        '#a51f35'  // Stage 6 - Dark red
+    ];
+    const color = stageColors[stage - 1];
+    arena.style.borderColor = color;
+    arena.style.backgroundColor =
+        hexToRGBA(color, 0.08);
+    arenaLabel.style.color = color;
+    arenaLabel.textContent =
+        'STAGE ' + stage + ' ARENA';
+}
+
+// convert HEX color to RGBA
+function hexToRGBA(hex, opacity) {
+    const r = parseInt(hex.substring(1, 3), 16);
+    const g = parseInt(hex.substring(3, 5), 16);
+    const b = parseInt(hex.substring(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
 // resets score/round counters and kicks off round 1
 function startGame() {
-  score = 0;
-  round = 0;
-  lives = STARTING_LIVES;
-  multiplier = 1;
-  scoreEl.textContent = 'Score: 0';
-  updateStyleRank();
-  roundsEl.textContent = 'Round: 0 / ' + TOTAL_ROUNDS;
-  stageEl.textContent = 'Stage: 0 / ' + TOTAL_STAGES;
-  livesEl.textContent = 'Lives: ' + lives;
-  messageEl.textContent = '';
-  startBtn.textContent = 'Start';
-  startNextRound();
+    score = 0;
+    round = 0;
+    lives = STARTING_LIVES;
+    multiplier = 1;
+    scoreEl.textContent = 'Score: 0';
+    updateStyleRank();
+    roundsEl.textContent = 'Round: 0 / ' + TOTAL_ROUNDS;
+    stageEl.textContent = 'Stage: 1 / ' + TOTAL_STAGES;
+    livesEl.textContent = 'Lives: ' + lives;
+    messageEl.textContent = '';
+    startBtn.textContent = 'Start';
+    startBtn.style.display = 'inline-block';
+    startNextRound();
 }
 
 // begins one round: hides the start button and waits a random delay
